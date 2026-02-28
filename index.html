@@ -14,85 +14,220 @@
       <div class="logo">HD</div>
       <div>
         <h1>HelpDesk Mini</h1>
-        <p class="muted">Abertura e gestão de chamados</p>
+        <p class="muted">Chamados • Filiais • PDVs</p>
       </div>
     </div>
 
     <div class="actions">
-      <button class="btn ghost" id="btnExport">Exportar CSV</button>
+      <button class="btn ghost" id="btnTheme" title="Alternar tema">Tema</button>
       <button class="btn danger" id="btnReset">Reset</button>
     </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="tabChamados">Chamados</button>
+    <button class="tab" data-tab="tabFila">Fila & CSV</button>
   </div>
 </header>
 
 <main class="wrap">
 
-  <!-- Dashboard -->
-  <section class="grid">
-    <div class="card kpi">
-      <div class="kpiTop">
-        <span class="kpiTitle">Abertos</span>
-        <span class="dot open"></span>
-      </div>
-      <div class="kpiValue" id="kpiOpen">0</div>
-      <div class="kpiHint muted">Chamados aguardando</div>
-    </div>
+  <!-- ===== TAB 1: CHAMADOS ===== -->
+  <section id="tabChamados" class="tabPane">
 
-    <div class="card kpi">
-      <div class="kpiTop">
-        <span class="kpiTitle">Em andamento</span>
-        <span class="dot prog"></span>
-      </div>
-      <div class="kpiValue" id="kpiProg">0</div>
-      <div class="kpiHint muted">Sendo atendidos</div>
-    </div>
-
-    <div class="card kpi">
-      <div class="kpiTop">
-        <span class="kpiTitle">Resolvidos</span>
-        <span class="dot done"></span>
-      </div>
-      <div class="kpiValue" id="kpiDone">0</div>
-      <div class="kpiHint muted">Finalizados</div>
-    </div>
-
-    <div class="card kpi">
-      <div class="kpiTop">
-        <span class="kpiTitle">Total</span>
-        <span class="dot total"></span>
-      </div>
-      <div class="kpiValue" id="kpiTotal">0</div>
-      <div class="kpiHint muted">No sistema</div>
-    </div>
-  </section>
-
-  <!-- Form + Filtros -->
-  <section class="split">
-    <section class="card">
-      <div class="between">
-        <h2 id="formTitle">Abrir chamado</h2>
-        <span class="pill muted" id="editingPill" hidden>Editando</span>
+    <!-- Dashboard -->
+    <section class="grid">
+      <div class="card kpi">
+        <div class="kpiTop">
+          <span class="kpiTitle">Abertos</span>
+          <span class="dot open"></span>
+        </div>
+        <div class="kpiValue" id="kpiOpen">0</div>
+        <div class="kpiHint muted">Aguardando</div>
       </div>
 
-      <form id="form" autocomplete="off">
-        <div class="row2">
-          <div>
-            <label>Título</label>
-            <input id="title" maxlength="80" placeholder="Ex.: PDV não imprime NFC-e" />
-          </div>
-          <div>
-            <label>Solicitante</label>
-            <input id="requester" maxlength="40" placeholder="Ex.: Caixa 01" />
-          </div>
+      <div class="card kpi">
+        <div class="kpiTop">
+          <span class="kpiTitle">Em andamento</span>
+          <span class="dot prog"></span>
+        </div>
+        <div class="kpiValue" id="kpiProg">0</div>
+        <div class="kpiHint muted">Atendimento</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpiTop">
+          <span class="kpiTitle">Resolvidos</span>
+          <span class="dot done"></span>
+        </div>
+        <div class="kpiValue" id="kpiDone">0</div>
+        <div class="kpiHint muted">Finalizados</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpiTop">
+          <span class="kpiTitle">Total</span>
+          <span class="dot total"></span>
+        </div>
+        <div class="kpiValue" id="kpiTotal">0</div>
+        <div class="kpiHint muted">No sistema</div>
+      </div>
+    </section>
+
+    <!-- Form + Filtros -->
+    <section class="split">
+      <section class="card">
+        <div class="between">
+          <h2 id="formTitle">Abrir chamado</h2>
+          <span class="pill muted" id="editingPill" hidden>Editando</span>
         </div>
 
-        <label>Descrição</label>
-        <textarea id="desc" rows="4" maxlength="500" placeholder="Descreva o problema com detalhes..."></textarea>
+        <form id="form" autocomplete="off">
+          <div class="row2">
+            <div>
+              <label>Título</label>
+              <input id="title" maxlength="80" placeholder="Ex.: PDV não imprime NFC-e" />
+            </div>
+            <div>
+              <label>Solicitante</label>
+              <input id="requester" maxlength="40" placeholder="Ex.: Caixa 01" />
+            </div>
+          </div>
+
+          <label>Descrição</label>
+          <textarea id="desc" rows="4" maxlength="800" placeholder="Descreva o problema com detalhes..."></textarea>
+
+          <div class="row4">
+            <div>
+              <label>Filial</label>
+              <select id="branch">
+                <option value="1">Filial 1</option>
+                <option value="2">Filial 2</option>
+                <option value="3">Filial 3</option>
+                <option value="4">Filial 4</option>
+                <option value="5">Filial 5</option>
+                <option value="6">Filial 6</option>
+                <option value="7">Filial 7</option>
+              </select>
+            </div>
+            <div>
+              <label>PDV</label>
+              <select id="pdv">
+                <option value="1">PDV 1</option>
+                <option value="2">PDV 2</option>
+                <option value="3">PDV 3</option>
+                <option value="4">PDV 4</option>
+                <option value="5">PDV 5</option>
+              </select>
+            </div>
+            <div>
+              <label>Categoria</label>
+              <select id="category">
+                <option value="PDV" selected>PDV</option>
+                <option value="Rede">Rede</option>
+                <option value="Impressora">Impressora</option>
+                <option value="Sistema">Sistema</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+            <div>
+              <label>Prioridade</label>
+              <select id="priority">
+                <option value="Alta">Alta</option>
+                <option value="Média" selected>Média</option>
+                <option value="Baixa">Baixa</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row3">
+            <div>
+              <label>Status</label>
+              <select id="status">
+                <option value="Aberto" selected>Aberto</option>
+                <option value="Em andamento">Em andamento</option>
+                <option value="Resolvido">Resolvido</option>
+              </select>
+            </div>
+            <div>
+              <label>Responsável</label>
+              <input id="assignedTo" maxlength="40" placeholder="Ex.: TI / CPD" />
+            </div>
+            <div>
+              <label>Tags (vírgula)</label>
+              <input id="tags" maxlength="120" placeholder="Ex.: nfc-e, sat, cpd" />
+            </div>
+          </div>
+
+          <div class="rowBtns">
+            <button class="btn" type="submit" id="btnSave">Salvar chamado</button>
+            <button class="btn ghost" type="button" id="btnCancel" hidden>Cancelar edição</button>
+            <button class="btn ghost" type="button" id="btnSeed">Gerar exemplos</button>
+          </div>
+
+          <p class="msg" id="msg"></p>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="between">
+          <h2>Pesquisar e Filtrar</h2>
+          <span class="muted small" id="count"></span>
+        </div>
+
+        <label>Buscar (título, descrição, solicitante, tag)</label>
+        <input id="q" placeholder="Digite para pesquisar..." />
+
+        <div class="row4">
+          <div>
+            <label>Status</label>
+            <select id="fStatus">
+              <option value="Todos" selected>Todos</option>
+              <option value="Aberto">Aberto</option>
+              <option value="Em andamento">Em andamento</option>
+              <option value="Resolvido">Resolvido</option>
+            </select>
+          </div>
+          <div>
+            <label>Prioridade</label>
+            <select id="fPriority">
+              <option value="Todos" selected>Todos</option>
+              <option value="Alta">Alta</option>
+              <option value="Média">Média</option>
+              <option value="Baixa">Baixa</option>
+            </select>
+          </div>
+          <div>
+            <label>Filial</label>
+            <select id="fBranch">
+              <option value="Todos" selected>Todas</option>
+              <option value="1">Filial 1</option>
+              <option value="2">Filial 2</option>
+              <option value="3">Filial 3</option>
+              <option value="4">Filial 4</option>
+              <option value="5">Filial 5</option>
+              <option value="6">Filial 6</option>
+              <option value="7">Filial 7</option>
+            </select>
+          </div>
+          <div>
+            <label>PDV</label>
+            <select id="fPDV">
+              <option value="Todos" selected>Todos</option>
+              <option value="1">PDV 1</option>
+              <option value="2">PDV 2</option>
+              <option value="3">PDV 3</option>
+              <option value="4">PDV 4</option>
+              <option value="5">PDV 5</option>
+            </select>
+          </div>
+        </div>
 
         <div class="row3">
           <div>
             <label>Categoria</label>
-            <select id="category">
+            <select id="fCategory">
+              <option value="Todos" selected>Todas</option>
               <option value="PDV">PDV</option>
               <option value="Rede">Rede</option>
               <option value="Impressora">Impressora</option>
@@ -101,108 +236,79 @@
             </select>
           </div>
           <div>
-            <label>Prioridade</label>
-            <select id="priority">
-              <option value="Alta">Alta</option>
-              <option value="Média" selected>Média</option>
-              <option value="Baixa">Baixa</option>
+            <label>Ordenar</label>
+            <select id="sort">
+              <option value="novo" selected>Mais novos</option>
+              <option value="antigo">Mais antigos</option>
+              <option value="prioridade">Prioridade</option>
             </select>
           </div>
           <div>
-            <label>Status</label>
-            <select id="status">
-              <option value="Aberto" selected>Aberto</option>
-              <option value="Em andamento">Em andamento</option>
-              <option value="Resolvido">Resolvido</option>
-            </select>
+            <label>Limpar filtros</label>
+            <button class="btn ghost full" type="button" id="btnClearFilters">Limpar</button>
           </div>
         </div>
-
-        <label>Tags (separe por vírgula)</label>
-        <input id="tags" maxlength="80" placeholder="Ex.: nfc-e, sat, cpd" />
-
-        <div class="rowBtns">
-          <button class="btn" type="submit" id="btnSave">Salvar chamado</button>
-          <button class="btn ghost" type="button" id="btnCancel" hidden>Cancelar edição</button>
-        </div>
-
-        <p class="msg" id="msg"></p>
-      </form>
+      </section>
     </section>
+
+    <!-- Lista (cards) -->
+    <section class="card">
+      <div class="between">
+        <h2>Chamados</h2>
+        <span class="muted small">Clique para ver detalhes</span>
+      </div>
+      <div class="list" id="list"></div>
+    </section>
+
+  </section>
+
+  <!-- ===== TAB 2: FILA & CSV ===== -->
+  <section id="tabFila" class="tabPane hidden">
 
     <section class="card">
       <div class="between">
-        <h2>Pesquisar e Filtrar</h2>
-        <span class="muted small" id="count"></span>
+        <h2>Fila de chamados (Tabela)</h2>
+        <span class="muted small" id="queueCount"></span>
       </div>
 
-      <label>Buscar (título, descrição, solicitante, tag)</label>
-      <input id="q" placeholder="Digite para pesquisar..." />
-
-      <div class="row3">
-        <div>
-          <label>Status</label>
-          <select id="fStatus">
-            <option value="Todos" selected>Todos</option>
-            <option value="Aberto">Aberto</option>
-            <option value="Em andamento">Em andamento</option>
-            <option value="Resolvido">Resolvido</option>
-          </select>
-        </div>
-        <div>
-          <label>Prioridade</label>
-          <select id="fPriority">
-            <option value="Todos" selected>Todos</option>
-            <option value="Alta">Alta</option>
-            <option value="Média">Média</option>
-            <option value="Baixa">Baixa</option>
-          </select>
-        </div>
-        <div>
-          <label>Categoria</label>
-          <select id="fCategory">
-            <option value="Todos" selected>Todos</option>
-            <option value="PDV">PDV</option>
-            <option value="Rede">Rede</option>
-            <option value="Impressora">Impressora</option>
-            <option value="Sistema">Sistema</option>
-            <option value="Outros">Outros</option>
-          </select>
-        </div>
+      <div class="rowBtns">
+        <button class="btn" id="btnExportCSV">Exportar CSV</button>
+        <button class="btn ghost" id="btnExportJSON">Backup JSON</button>
+        <label class="fileBtn">
+          Importar JSON
+          <input type="file" id="importJSON" accept="application/json" hidden>
+        </label>
       </div>
 
-      <div class="row3">
-        <div>
-          <label>Ordenar</label>
-          <select id="sort">
-            <option value="novo" selected>Mais novos</option>
-            <option value="antigo">Mais antigos</option>
-            <option value="prioridade">Prioridade</option>
-          </select>
-        </div>
-        <div>
-          <label>Limpar filtros</label>
-          <button class="btn ghost full" type="button" id="btnClearFilters">Limpar</button>
-        </div>
-        <div>
-          <label>Exemplo rápido</label>
-          <button class="btn full" type="button" id="btnSeed">Gerar exemplos</button>
-        </div>
+      <div class="tableWrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>ID</th>
+              <th>Filial</th>
+              <th>PDV</th>
+              <th>Status</th>
+              <th>Prior.</th>
+              <th>Categoria</th>
+              <th>Título</th>
+              <th>Solicitante</th>
+              <th>Resp.</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="queueBody"></tbody>
+        </table>
       </div>
+
+      <p class="muted small" style="margin-top:10px">
+        Dica: use os filtros da aba <strong>Chamados</strong> para refinar; a exportação CSV leva em conta os filtros atuais.
+      </p>
     </section>
+
   </section>
 
-  <!-- Lista -->
-  <section class="card">
-    <div class="between">
-      <h2>Chamados</h2>
-      <span class="muted small">Clique em um chamado para ver detalhes</span>
-    </div>
-
-    <div class="list" id="list"></div>
-  </section>
-
-  <!-- Modal -->
+  <!-- Modal Detalhes -->
   <dialog class="modal" id="modal">
     <div class="modalCard">
       <div class="between">
