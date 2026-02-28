@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HelpDesk Mini | Chamados</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="top">
+  <div class="topInner">
+    <div class="brand">
+      <div class="logo">HD</div>
+      <div>
+        <h1>HelpDesk Mini</h1>
+        <p class="muted">Abertura e gestão de chamados</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn ghost" id="btnExport">Exportar CSV</button>
+      <button class="btn danger" id="btnReset">Reset</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- Dashboard -->
+  <section class="grid">
+    <div class="card kpi">
+      <div class="kpiTop">
+        <span class="kpiTitle">Abertos</span>
+        <span class="dot open"></span>
+      </div>
+      <div class="kpiValue" id="kpiOpen">0</div>
+      <div class="kpiHint muted">Chamados aguardando</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="kpiTop">
+        <span class="kpiTitle">Em andamento</span>
+        <span class="dot prog"></span>
+      </div>
+      <div class="kpiValue" id="kpiProg">0</div>
+      <div class="kpiHint muted">Sendo atendidos</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="kpiTop">
+        <span class="kpiTitle">Resolvidos</span>
+        <span class="dot done"></span>
+      </div>
+      <div class="kpiValue" id="kpiDone">0</div>
+      <div class="kpiHint muted">Finalizados</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="kpiTop">
+        <span class="kpiTitle">Total</span>
+        <span class="dot total"></span>
+      </div>
+      <div class="kpiValue" id="kpiTotal">0</div>
+      <div class="kpiHint muted">No sistema</div>
+    </div>
+  </section>
+
+  <!-- Form + Filtros -->
+  <section class="split">
+    <section class="card">
+      <div class="between">
+        <h2 id="formTitle">Abrir chamado</h2>
+        <span class="pill muted" id="editingPill" hidden>Editando</span>
+      </div>
+
+      <form id="form" autocomplete="off">
+        <div class="row2">
+          <div>
+            <label>Título</label>
+            <input id="title" maxlength="80" placeholder="Ex.: PDV não imprime NFC-e" />
+          </div>
+          <div>
+            <label>Solicitante</label>
+            <input id="requester" maxlength="40" placeholder="Ex.: Caixa 01" />
+          </div>
+        </div>
+
+        <label>Descrição</label>
+        <textarea id="desc" rows="4" maxlength="500" placeholder="Descreva o problema com detalhes..."></textarea>
+
+        <div class="row3">
+          <div>
+            <label>Categoria</label>
+            <select id="category">
+              <option value="PDV">PDV</option>
+              <option value="Rede">Rede</option>
+              <option value="Impressora">Impressora</option>
+              <option value="Sistema">Sistema</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div>
+            <label>Prioridade</label>
+            <select id="priority">
+              <option value="Alta">Alta</option>
+              <option value="Média" selected>Média</option>
+              <option value="Baixa">Baixa</option>
+            </select>
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="status">
+              <option value="Aberto" selected>Aberto</option>
+              <option value="Em andamento">Em andamento</option>
+              <option value="Resolvido">Resolvido</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Tags (separe por vírgula)</label>
+        <input id="tags" maxlength="80" placeholder="Ex.: nfc-e, sat, cpd" />
+
+        <div class="rowBtns">
+          <button class="btn" type="submit" id="btnSave">Salvar chamado</button>
+          <button class="btn ghost" type="button" id="btnCancel" hidden>Cancelar edição</button>
+        </div>
+
+        <p class="msg" id="msg"></p>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="between">
+        <h2>Pesquisar e Filtrar</h2>
+        <span class="muted small" id="count"></span>
+      </div>
+
+      <label>Buscar (título, descrição, solicitante, tag)</label>
+      <input id="q" placeholder="Digite para pesquisar..." />
+
+      <div class="row3">
+        <div>
+          <label>Status</label>
+          <select id="fStatus">
+            <option value="Todos" selected>Todos</option>
+            <option value="Aberto">Aberto</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Resolvido">Resolvido</option>
+          </select>
+        </div>
+        <div>
+          <label>Prioridade</label>
+          <select id="fPriority">
+            <option value="Todos" selected>Todos</option>
+            <option value="Alta">Alta</option>
+            <option value="Média">Média</option>
+            <option value="Baixa">Baixa</option>
+          </select>
+        </div>
+        <div>
+          <label>Categoria</label>
+          <select id="fCategory">
+            <option value="Todos" selected>Todos</option>
+            <option value="PDV">PDV</option>
+            <option value="Rede">Rede</option>
+            <option value="Impressora">Impressora</option>
+            <option value="Sistema">Sistema</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row3">
+        <div>
+          <label>Ordenar</label>
+          <select id="sort">
+            <option value="novo" selected>Mais novos</option>
+            <option value="antigo">Mais antigos</option>
+            <option value="prioridade">Prioridade</option>
+          </select>
+        </div>
+        <div>
+          <label>Limpar filtros</label>
+          <button class="btn ghost full" type="button" id="btnClearFilters">Limpar</button>
+        </div>
+        <div>
+          <label>Exemplo rápido</label>
+          <button class="btn full" type="button" id="btnSeed">Gerar exemplos</button>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <!-- Lista -->
+  <section class="card">
+    <div class="between">
+      <h2>Chamados</h2>
+      <span class="muted small">Clique em um chamado para ver detalhes</span>
+    </div>
+
+    <div class="list" id="list"></div>
+  </section>
+
+  <!-- Modal -->
+  <dialog class="modal" id="modal">
+    <div class="modalCard">
+      <div class="between">
+        <h3 id="mTitle">Detalhes</h3>
+        <button class="iconBtn" id="mClose" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="meta" id="mMeta"></div>
+      <p class="mDesc" id="mDesc"></p>
+
+      <div class="tags" id="mTags"></div>
+
+      <div class="hr"></div>
+
+      <div class="between">
+        <h4>Histórico</h4>
+        <span class="muted small">Ações registradas</span>
+      </div>
+      <div class="history" id="mHistory"></div>
+
+      <div class="rowBtns">
+        <button class="btn" id="mEdit">Editar</button>
+        <button class="btn ghost" id="mNext">Avançar status</button>
+        <button class="btn danger" id="mDelete">Excluir</button>
+      </div>
+    </div>
+  </dialog>
+
+  <footer class="footer muted">
+    Criado por <strong>Totti Araújo</strong> • ADS • HelpDesk Mini
+  </footer>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
