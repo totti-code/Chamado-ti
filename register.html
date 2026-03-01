@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HelpDesk Mini | Criar conta</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap" style="max-width:520px">
+    <section class="card">
+      <h2>Criar conta</h2>
+      <p class="muted">Cadastre para abrir chamados.</p>
+
+      <label>Nome</label>
+      <input id="name" placeholder="Seu nome" />
+
+      <label style="margin-top:10px">Email</label>
+      <input id="email" placeholder="seuemail@exemplo.com" />
+
+      <label style="margin-top:10px">Senha</label>
+      <input id="pass" type="password" placeholder="mínimo 4 caracteres" />
+
+      <div class="rowBtns">
+        <button class="btn full" id="btnRegister">Cadastrar</button>
+        <a class="btn ghost full" href="login.html" style="text-align:center; text-decoration:none;">Já tenho conta</a>
+      </div>
+
+      <p class="msg" id="msg"></p>
+    </section>
+  </main>
+
+  <script type="module">
+    import { register } from "./auth.js";
+
+    const $ = (id) => document.getElementById(id);
+    const msg = $("msg");
+
+    function setMsg(t, ok=true){
+      msg.textContent = t || "";
+      msg.style.color = ok ? "#2ee59d" : "#ff8080";
+    }
+
+    $("btnRegister").addEventListener("click", () => {
+      const res = register({
+        name: $("name").value,
+        email: $("email").value,
+        password: $("pass").value,
+      });
+
+      if(!res.ok){ setMsg(res.msg, false); return; }
+      setMsg("Conta criada! Redirecionando para login...", true);
+      setTimeout(() => location.href = "login.html", 700);
+    });
+  </script>
+</body>
+</html>
