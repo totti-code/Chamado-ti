@@ -1,3 +1,8 @@
+import { requireAuth, logout, getSession } from "./auth.js";
+
+/* ✅ BLOQUEIA ACESSO SEM LOGIN (redireciona para login.html) */
+const session = requireAuth("login.html");
+
 const $ = (id) => document.getElementById(id);
 
 const STORAGE_KEY = "helpdesk_mini_v2";
@@ -65,6 +70,25 @@ function setMsg(text, ok=true){
   if(text){
     clearTimeout(setMsg._t);
     setMsg._t = setTimeout(()=> el.textContent = "", 2500);
+  }
+}
+
+/* ✅ MOSTRA "Logado como..." (se existir #loggedAs no HTML) + botão sair */
+function renderAuthUI(){
+  const s = session || getSession?.() || null;
+
+  const who = $("loggedAs");
+  if(who){
+    const label = s?.name || s?.email || "Usuário";
+    who.textContent = `Logado como: ${label}`;
+  }
+
+  const btnLogout = $("btnLogout");
+  if(btnLogout){
+    btnLogout.addEventListener("click", () => {
+      logout();
+      location.href = "login.html";
+    });
   }
 }
 
@@ -168,22 +192,17 @@ function applyFilters(list){
 
   const sort = $("sort").value;
 
-if(sort === "novo"){
-  // mais novos primeiro
-  out = out.slice().sort((a,b) => b.createdAtMs - a.createdAtMs);
-
-}else if(sort === "antigo"){
-  // mais antigos primeiro
-  out = out.slice().sort((a,b) => a.createdAtMs - b.createdAtMs);
-
-}else{
-  // atendimento: Prioridade (Alta>Media>Baixa) e, dentro, mais antigo primeiro
-  out = out.slice().sort((a,b) => {
-    const pr = priorityRank(b.priority) - priorityRank(a.priority);
-    if(pr !== 0) return pr;
-    return a.createdAtMs - b.createdAtMs; // MAIS ANTIGO PRIMEIRO
-  });
-}
+  if(sort === "novo"){
+    out = out.slice().sort((a,b) => b.createdAtMs - a.createdAtMs);
+  }else if(sort === "antigo"){
+    out = out.slice().sort((a,b) => a.createdAtMs - b.createdAtMs);
+  }else{
+    out = out.slice().sort((a,b) => {
+      const pr = priorityRank(b.priority) - priorityRank(a.priority);
+      if(pr !== 0) return pr;
+      return a.createdAtMs - b.createdAtMs;
+    });
+  }
 
   $("count").textContent = `${out.length} exibido(s)`;
   return out;
@@ -245,41 +264,40 @@ function renderCards(){
 /* ===== Fila (Tabela) ===== */
 function renderQueue(){
   const all = loadTickets();
-const filtered = applyFilters(all); // com filtros normais
-// REMOVE visualmente os resolvidos
-const list = filtered.filter(t => t.status !== "Resolvido");
+  const filtered = applyFilters(all);
+  const list = filtered.filter(t => t.status !== "Resolvido");
+
   const body = $("queueBody");
   body.innerHTML = "";
 
   $("queueCount").textContent = `${list.length} na fila (com filtros atuais)`;
 
   for(let i = 0; i < list.length; i++){
-  const t = list[i];
-  const pos = i + 1;
+    const t = list[i];
+    const pos = i + 1;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-  <td><strong>${pos}º</strong></td>
-  <td>${escapeHtml(t.createdAt)}</td>
-  <td>${escapeHtml(t.id)}</td>
-  <td>${escapeHtml(t.branch)}</td>
-  <td>${escapeHtml(t.pdv)}</td>
-  <td><span class="badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span></td>
-  <td><span class="badge ${priorityClass(t.priority)}">${escapeHtml(t.priority)}</span></td>
-  <td>${escapeHtml(t.category)}</td>
-  <td>${escapeHtml(t.title)}</td>
-  <td>${escapeHtml(t.requester)}</td>
-  <td>${escapeHtml(t.assignedTo || "-")}</td>
-  <td>
-    <div class="tActions">
-      <button class="linkBtn" data-act="open" data-id="${escapeHtml(t.id)}">Abrir</button>
-      <button class="linkBtn" data-act="next" data-id="${escapeHtml(t.id)}">Status+</button>
-    </div>
-  </td>
-`;
+      <td><strong>${pos}º</strong></td>
+      <td>${escapeHtml(t.createdAt)}</td>
+      <td>${escapeHtml(t.id)}</td>
+      <td>${escapeHtml(t.branch)}</td>
+      <td>${escapeHtml(t.pdv)}</td>
+      <td><span class="badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span></td>
+      <td><span class="badge ${priorityClass(t.priority)}">${escapeHtml(t.priority)}</span></td>
+      <td>${escapeHtml(t.category)}</td>
+      <td>${escapeHtml(t.title)}</td>
+      <td>${escapeHtml(t.requester)}</td>
+      <td>${escapeHtml(t.assignedTo || "-")}</td>
+      <td>
+        <div class="tActions">
+          <button class="linkBtn" data-act="open" data-id="${escapeHtml(t.id)}">Abrir</button>
+          <button class="linkBtn" data-act="next" data-id="${escapeHtml(t.id)}">Status+</button>
+        </div>
+      </td>
+    `;
     body.appendChild(tr);
   }
 
-  // ações da tabela
   body.querySelectorAll("button[data-act]").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -364,18 +382,20 @@ function deleteTicket(id){
 function buildCSVFrom(list){
   const header = [
     "createdAt","id","branch","pdv","status","priority","category",
-    "title","requester","assignedTo","tags","desc"
+    "title","requester","assignedTo","tags","desc",
+    "ownerUserId","ownerName","ownerEmail"
   ];
   const rows = list.map(t => ([
     t.createdAt, t.id, t.branch, t.pdv, t.status, t.priority, t.category,
-    t.title, t.requester, t.assignedTo || "", (t.tags||[]).join("|"), t.desc
+    t.title, t.requester, t.assignedTo || "", (t.tags||[]).join("|"), t.desc,
+    t.owner?.userId || "", t.owner?.name || "", t.owner?.email || ""
   ]));
   return [header.join(","), ...rows.map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(","))].join("\n");
 }
 
 function exportCSV(){
   const all = loadTickets();
-  const list = applyFilters(all); // exporta considerando filtros
+  const list = applyFilters(all);
   if(list.length === 0){
     setMsg("Não há chamados (com esses filtros) para exportar.", false);
     return;
@@ -423,7 +443,6 @@ async function importJSONFile(file){
     const incoming = Array.isArray(data) ? data : (data.tickets || []);
     if(!Array.isArray(incoming)) throw new Error("Formato inválido");
 
-    // sanitiza + garante campos mínimos
     const cleaned = incoming.map(t => ({
       id: String(t.id || uid()),
       createdAt: String(t.createdAt || nowISO()),
@@ -439,7 +458,12 @@ async function importJSONFile(file){
       status: String(t.status || "Aberto"),
       assignedTo: String(t.assignedTo || ""),
       tags: Array.isArray(t.tags) ? t.tags.map(String) : [],
-      history: Array.isArray(t.history) ? t.history : []
+      history: Array.isArray(t.history) ? t.history : [],
+      owner: t.owner ? {
+        userId: String(t.owner.userId || ""),
+        name: String(t.owner.name || ""),
+        email: String(t.owner.email || "")
+      } : null
     }));
 
     saveTickets(cleaned);
@@ -520,7 +544,12 @@ function seed(){
       status: e.status,
       assignedTo: e.assignedTo,
       tags: e.tags || [],
-      history: []
+      history: [],
+      owner: {
+        userId: session?.userId || "seed",
+        name: session?.name || "Sistema",
+        email: session?.email || ""
+      }
     };
     addHistory(t, "Chamado criado (exemplo)");
     addHistory(t, `Status inicial: ${t.status}`);
@@ -551,13 +580,11 @@ function setTab(tabId){
     pane.classList.toggle("hidden", pane.id !== tabId);
   });
 
-  // sempre atualiza fila quando entrar nela
   if(tabId === "tabFila") renderQueue();
 }
 
 /* ===== Tema (simples) ===== */
 function applyTheme(theme){
-  // theme: "dark" | "light"
   document.documentElement.dataset.theme = theme;
   const prefs = loadPrefs();
   prefs.theme = theme;
@@ -585,7 +612,7 @@ function toggleTheme(){
 /* ===== Render geral ===== */
 function renderAll(){
   renderCards();
-  renderQueue(); // mantém a fila em dia também
+  renderQueue();
 }
 
 /* ===== Eventos ===== */
@@ -629,14 +656,22 @@ $("form").addEventListener("submit", (e) => {
   }
 
   const createdAtMs = Date.now();
+
+  /* ✅ SALVA O CHAMADO COM O DONO (owner) */
   const t = {
     id: uid(),
     createdAt: nowISO(),
     createdAtMs,
     updatedAt: nowISO(),
     ...data,
+    owner: {
+      userId: session.userId,
+      name: session.name,
+      email: session.email
+    },
     history: []
   };
+
   addHistory(t, "Chamado criado");
   addHistory(t, `Status inicial: ${t.status}`);
 
@@ -708,6 +743,7 @@ $("btnTheme").addEventListener("click", toggleTheme);
 
 /* Inicial */
 (function init(){
+  renderAuthUI();                 // ✅ mostra “Logado como…”
   const prefs = loadPrefs();
   applyTheme(prefs.theme || "dark");
   clearForm();
