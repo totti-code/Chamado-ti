@@ -173,91 +173,89 @@
         </form>
       </section>
 
-      <section class="card">
-        <div class="between">
-          <h2>Pesquisar e Filtrar</h2>
-          <span class="muted small" id="count"></span>
-        </div>
-
-        <label>Buscar (título, descrição, solicitante, tag)</label>
-        <input id="q" placeholder="Digite para pesquisar..." />
-
-        <div class="row4">
-          <div>
-            <label>Status</label>
-            <select id="fStatus">
-              <option value="Todos" selected>Todos</option>
-              <option value="Aberto">Aberto</option>
-              <option value="Em andamento">Em andamento</option>
-              <option value="Resolvido">Resolvido</option>
-            </select>
-          </div>
-          <div>
-            <label>Prioridade</label>
-            <select id="fPriority">
-              <option value="Todos" selected>Todos</option>
-              <option value="Alta">Alta</option>
-              <option value="Média">Média</option>
-              <option value="Baixa">Baixa</option>
-            </select>
-          </div>
-          <div>
-            <label>Filial</label>
-            <select id="fBranch">
-              <option value="Todos" selected>Todas</option>
-              <option value="1">Filial 1</option>
-              <option value="2">Filial 2</option>
-              <option value="3">Filial 3</option>
-              <option value="4">Filial 4</option>
-              <option value="5">Filial 5</option>
-              <option value="6">Filial 6</option>
-              <option value="7">Filial 7</option>
-            </select>
-          </div>
-          <div>
-            <label>PDV</label>
-            <select id="fPDV">
-              <option value="Todos" selected>Todos</option>
-              <option value="1">PDV 1</option>
-              <option value="2">PDV 2</option>
-              <option value="3">PDV 3</option>
-              <option value="4">PDV 4</option>
-              <option value="5">PDV 5</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row3">
-          <div>
-            <label>Categoria</label>
-            <select id="fCategory">
-              <option value="Todos" selected>Todas</option>
-              <option value="PDV">PDV</option>
-              <option value="Rede">Rede</option>
-              <option value="Impressora">Impressora</option>
-              <option value="Sistema">Sistema</option>
-              <option value="Outros">Outros</option>
-            </select>
-          </div>
-          <div>
-            <label>Ordenar</label>
-            <select id="sort">
-              <option value="atendimento" selected>Ordem de atendimento (Prioridade + Tempo)</option>
-              <option value="novo">Mais novos</option>
-              <option value="antigo">Mais antigos</option>
-            </select>
-          </div>
-          <div>
-            <label>Limpar filtros</label>
-            <button class="btn ghost full" type="button" id="btnClearFilters">Limpar</button>
-          </div>
-        </div>
-      </section>
-    </section>
-
-  </section>
-
   <!-- ===== TAB 2: FILA & CSV ===== -->
+  <!-- ✅ FILTROS (AGORA NA ABA FILA & CSV) -->
+<section class="card">
+  <div class="between">
+    <h2>Pesquisar e Filtrar</h2>
+    <span class="muted small" id="count"></span>
+  </div>
+
+  <label>Buscar (título, descrição, solicitante, tag)</label>
+  <input id="q" placeholder="Digite para pesquisar..." />
+
+  <div class="row4">
+    <div>
+      <label>Status</label>
+      <select id="fStatus">
+        <option value="Todos" selected>Todos</option>
+        <option value="Aberto">Aberto</option>
+        <option value="Em andamento">Em andamento</option>
+        <option value="Resolvido">Resolvido</option>
+      </select>
+    </div>
+    <div>
+      <label>Prioridade</label>
+      <select id="fPriority">
+        <option value="Todos" selected>Todos</option>
+        <option value="Alta">Alta</option>
+        <option value="Média">Média</option>
+        <option value="Baixa">Baixa</option>
+      </select>
+    </div>
+    <div>
+      <label>Filial</label>
+      <select id="fBranch">
+        <option value="Todos" selected>Todas</option>
+        <option value="1">Filial 1</option>
+        <option value="2">Filial 2</option>
+        <option value="3">Filial 3</option>
+        <option value="4">Filial 4</option>
+        <option value="5">Filial 5</option>
+        <option value="6">Filial 6</option>
+        <option value="7">Filial 7</option>
+      </select>
+    </div>
+    <div>
+      <label>PDV</label>
+      <select id="fPDV">
+        <option value="Todos" selected>Todos</option>
+        <option value="1">PDV 1</option>
+        <option value="2">PDV 2</option>
+        <option value="3">PDV 3</option>
+        <option value="4">PDV 4</option>
+        <option value="5">PDV 5</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row3">
+    <div>
+      <label>Categoria</label>
+      <select id="fCategory">
+        <option value="Todos" selected>Todas</option>
+        <option value="PDV">PDV</option>
+        <option value="Rede">Rede</option>
+        <option value="Impressora">Impressora</option>
+        <option value="Sistema">Sistema</option>
+        <option value="Outros">Outros</option>
+      </select>
+    </div>
+    <div>
+      <label>Ordenar</label>
+      <select id="sort">
+        <option value="atendimento" selected>Ordem de atendimento (Prioridade + Tempo)</option>
+        <option value="novo">Mais novos</option>
+        <option value="antigo">Mais antigos</option>
+      </select>
+    </div>
+    <div>
+      <label>Limpar filtros</label>
+      <button class="btn ghost full" type="button" id="btnClearFilters">Limpar</button>
+    </div>
+  </div>
+</section>
+      
   <section id="tabFila" class="tabPane hidden">
 
     <section class="card">
@@ -298,7 +296,7 @@
       </div>
 
       <p class="muted small" style="margin-top:10px">
-        Dica: use os filtros da aba <strong>Chamados</strong> para refinar; a exportação CSV leva em conta os filtros atuais.
+        Dica: use os filtros acima para refinar a fila; a exportação CSV leva em conta os filtros atuais.
       </p>
     </section>
 
