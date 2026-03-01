@@ -245,12 +245,11 @@ function renderCards(){
 /* ===== Fila (Tabela) ===== */
 function renderQueue(){
   const all = loadTickets();
-const listAll = applyFilters(all);               // lista com filtros
-const list = listAll.filter(t => t.status !== "Resolvido"); // fila visual (sem resolvidos)
+  const list = applyFilters(all); // respeita filtros atuais
   const body = $("queueBody");
   body.innerHTML = "";
 
-  $("queueCount").textContent = `${list.length} na fila (pendentes) • ${listAll.length} total (filtrado)`;
+  $("queueCount").textContent = `${list.length} na fila (com filtros atuais)`;
 
   for(let i = 0; i < list.length; i++){
   const t = list[i];
@@ -373,9 +372,8 @@ function buildCSVFrom(list){
 }
 
 function exportCSV(){
-  function exportCSV(){
   const all = loadTickets();
-  const list = applyFilters(all); // <- inclui resolvidos
+  const list = applyFilters(all); // exporta considerando filtros
   if(list.length === 0){
     setMsg("Não há chamados (com esses filtros) para exportar.", false);
     return;
