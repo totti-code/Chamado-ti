@@ -660,7 +660,7 @@ $("btnClearFilters").addEventListener("click", () => {
   $("fCategory").value = "Todos";
   $("fBranch").value = "Todos";
   $("fPDV").value = "Todos";
-  $("sort").value = "novo";
+  $("sort").value = "atendimento";
   renderAll();
 });
 
