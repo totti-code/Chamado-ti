@@ -1,7 +1,6 @@
 :root{
   --bg:#0b1220;
   --card:#111a2e;
-  --line:#22304f;
   --text:#eaf2ff;
   --muted:#a7b7d6;
 
@@ -222,7 +221,6 @@ input:focus, select:focus, textarea:focus{
   background: rgba(255,59,59,0.14);
   border-color: rgba(255,59,59,0.35);
 }
-.full{ width:100%; }
 
 .fileBtn{
   display:inline-flex;
@@ -452,7 +450,7 @@ body.light .hr{
   font-size: 12px;
 }
 body.light .hItem{
-  border: 1px solid rgba(0,0,0,0.08);
+  border:  1px solid rgba(0,0,0,0.08);
   background: rgba(0,0,0,0.03);
 }
 
@@ -471,7 +469,7 @@ body.light .hItem{
   .actions{ justify-content:flex-end; }
 }
 
-/* ===== Ajuste SELECT dark ===== */
+/* Ajuste SELECT dark */
 select {
   background-color: #18243a !important;
   color: #ffffff !important;
@@ -482,8 +480,6 @@ body.light select{
   background-color: rgba(0,0,0,0.03) !important;
   color: var(--text) !important;
 }
-
-/* opções do dropdown */
 select option {
   background-color: #0f1b2e;
   color: #ffffff;
