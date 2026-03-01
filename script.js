@@ -167,17 +167,23 @@ function applyFilters(list){
   }
 
   const sort = $("sort").value;
-  if(sort === "novo"){
-    out = out.slice().sort((a,b) => b.createdAtMs - a.createdAtMs);
-  }else if(sort === "antigo"){
-    out = out.slice().sort((a,b) => a.createdAtMs - b.createdAtMs);
-  }else{
-    out = out.slice().sort((a,b) => {
-      const pr = priorityRank(b.priority) - priorityRank(a.priority);
-      if(pr !== 0) return pr;
-      return b.createdAtMs - a.createdAtMs;
-    });
-  }
+
+if(sort === "novo"){
+  // mais novos primeiro
+  out = out.slice().sort((a,b) => b.createdAtMs - a.createdAtMs);
+
+}else if(sort === "antigo"){
+  // mais antigos primeiro
+  out = out.slice().sort((a,b) => a.createdAtMs - b.createdAtMs);
+
+}else{
+  // atendimento: Prioridade (Alta>Media>Baixa) e, dentro, mais antigo primeiro
+  out = out.slice().sort((a,b) => {
+    const pr = priorityRank(b.priority) - priorityRank(a.priority);
+    if(pr !== 0) return pr;
+    return a.createdAtMs - b.createdAtMs; // MAIS ANTIGO PRIMEIRO
+  });
+}
 
   $("count").textContent = `${out.length} exibido(s)`;
   return out;
