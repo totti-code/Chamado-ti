@@ -1,8 +1,6 @@
-// HelpDesk Mini - by Totti Araújo
 const $ = (id) => document.getElementById(id);
 
 const STORAGE_KEY = "helpdeskmini_tickets_v1";
-const USER_KEY = "helpdeskmini_user_v1";
 const THEME_KEY = "helpdeskmini_theme_v1";
 
 // ===== Elements =====
@@ -10,10 +8,7 @@ const tabs = Array.from(document.querySelectorAll(".tab"));
 const tabChamados = $("tabChamados");
 const tabFila = $("tabFila");
 
-const loggedAs = $("loggedAs");
 const btnTheme = $("btnTheme");
-const btnReset = $("btnReset");
-const btnLogout = $("btnLogout");
 
 const form = $("form");
 const msg = $("msg");
@@ -125,6 +120,15 @@ function safeText(s) {
   return String(s ?? "").trim();
 }
 
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 // ===== Storage =====
 function loadTickets() {
   try {
@@ -137,13 +141,6 @@ function saveTickets() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
 }
 
-function getUser() {
-  return localStorage.getItem(USER_KEY) || "";
-}
-function setUser(name) {
-  localStorage.setItem(USER_KEY, name);
-}
-
 function loadTheme() {
   return localStorage.getItem(THEME_KEY) || "dark";
 }
@@ -151,23 +148,9 @@ function saveTheme(t) {
   localStorage.setItem(THEME_KEY, t);
 }
 
-// ===== Login simples =====
-function ensureUser() {
-  let u = getUser();
-  if (!u) {
-    u = prompt("Seu nome (para registrar no sistema):") || "";
-    u = u.trim();
-    if (!u) u = "Usuário";
-    setUser(u);
-  }
-  loggedAs.textContent = `Logado: ${u}`;
-}
-
 // ===== Tabs =====
 function setTab(tabId) {
-  // buttons
   tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
-  // panes
   tabChamados.classList.toggle("hidden", tabId !== "tabChamados");
   tabFila.classList.toggle("hidden", tabId !== "tabFila");
 }
@@ -219,18 +202,16 @@ function getFormData() {
   return { data };
 }
 
-function addHistory(t, action, user) {
+function addHistory(t, action) {
   t.history = Array.isArray(t.history) ? t.history : [];
   t.history.unshift({
     at: nowISO(),
-    user,
     action
   });
 }
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
-  const user = getUser() || "Usuário";
 
   const { data, error } = getFormData();
   if (error) return toast(error, false);
@@ -239,13 +220,12 @@ form.addEventListener("submit", (e) => {
     const idx = tickets.findIndex(t => t.id === editingId);
     if (idx === -1) return toast("Chamado não encontrado.", false);
 
-    const old = tickets[idx];
     tickets[idx] = {
-      ...old,
+      ...tickets[idx],
       ...data,
       updatedAt: nowISO()
     };
-    addHistory(tickets[idx], "Chamado editado", user);
+    addHistory(tickets[idx], "Chamado editado");
     saveTickets();
     toast("Chamado atualizado ✅");
     resetForm();
@@ -260,7 +240,7 @@ form.addEventListener("submit", (e) => {
     ...data,
     history: []
   };
-  addHistory(t, "Chamado criado", user);
+  addHistory(t, "Chamado criado");
 
   tickets.unshift(t);
   saveTickets();
@@ -275,7 +255,6 @@ btnCancel.addEventListener("click", () => {
 });
 
 btnSeed.addEventListener("click", () => {
-  const user = getUser() || "Usuário";
   const examples = [
     {
       title: "PDV 2 não imprime NFC-e",
@@ -308,7 +287,7 @@ btnSeed.addEventListener("click", () => {
       ...ex,
       history: []
     };
-    addHistory(t, "Chamado criado (exemplo)", user);
+    addHistory(t, "Chamado criado (exemplo)");
     tickets.unshift(t);
   });
 
@@ -328,7 +307,6 @@ function getFilteredTickets() {
 
   let arr = [...tickets];
 
-  // search
   if (q) {
     arr = arr.filter(t => {
       const hay = [
@@ -345,14 +323,12 @@ function getFilteredTickets() {
   if (fpdv !== "Todos") arr = arr.filter(t => t.pdv === fpdv);
   if (fc !== "Todos") arr = arr.filter(t => t.category === fc);
 
-  // sort
   const s = sortEl.value;
   if (s === "novo") {
     arr.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
   } else if (s === "antigo") {
     arr.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
   } else {
-    // atendimento: prioridade desc, depois mais antigo primeiro
     arr.sort((a,b) => {
       const pw = priWeight(b.priority) - priWeight(a.priority);
       if (pw !== 0) return pw;
@@ -432,7 +408,6 @@ function renderCards() {
     </div>
   `).join("");
 
-  // click handlers
   Array.from(listEl.querySelectorAll(".item")).forEach(card => {
     card.addEventListener("click", () => openModal(card.dataset.id));
   });
@@ -515,12 +490,11 @@ function openModal(id) {
   `;
 
   mDesc.textContent = t.desc || "";
-
   mTags.innerHTML = (t.tags || []).map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`).join("");
 
   const hist = Array.isArray(t.history) ? t.history : [];
   mHistory.innerHTML = hist.length
-    ? hist.map(h => `<div class="hItem">🕒 ${fmtDate(h.at)} • <strong>${escapeHtml(h.user)}</strong> — ${escapeHtml(h.action)}</div>`).join("")
+    ? hist.map(h => `<div class="hItem">🕒 ${fmtDate(h.at)} — ${escapeHtml(h.action)}</div>`).join("")
     : `<div class="hItem">Sem histórico ainda.</div>`;
 
   modal.showModal();
@@ -546,9 +520,6 @@ mNext.addEventListener("click", () => {
 
 mDelete.addEventListener("click", () => {
   if (!viewingId) return;
-  const t = tickets.find(x => x.id === viewingId);
-  if (!t) return;
-
   if (!confirm("Tem certeza que deseja excluir este chamado?")) return;
 
   tickets = tickets.filter(x => x.id !== viewingId);
@@ -583,7 +554,6 @@ function startEdit(id) {
 }
 
 function nextStatus(id) {
-  const user = getUser() || "Usuário";
   const idx = tickets.findIndex(t => t.id === id);
   if (idx === -1) return toast("Chamado não encontrado.", false);
 
@@ -591,7 +561,7 @@ function nextStatus(id) {
   const old = t.status;
   t.status = statusNext(t.status);
   t.updatedAt = nowISO();
-  addHistory(t, `Status alterado: ${old} → ${t.status}`, user);
+  addHistory(t, `Status alterado: ${old} → ${t.status}`);
 
   saveTickets();
   toast("Status atualizado ✅");
@@ -624,8 +594,6 @@ importJSON.addEventListener("change", async (e) => {
     const data = JSON.parse(text);
 
     if (!Array.isArray(data)) throw new Error("JSON inválido (não é array).");
-
-    // validação simples
     const ok = data.every(x => x && typeof x === "object" && x.id && x.title);
     if (!ok) throw new Error("JSON inválido (estrutura inesperada).");
 
@@ -671,7 +639,7 @@ btnExportCSV.addEventListener("click", () => {
   downloadFile("helpdeskmini_chamados.csv", csv, "text/csv;charset=utf-8");
 });
 
-// ===== Theme / Reset / Logout =====
+// ===== Theme =====
 function applyTheme() {
   const t = loadTheme();
   document.body.classList.toggle("light", t === "light");
@@ -683,35 +651,9 @@ btnTheme.addEventListener("click", () => {
   applyTheme();
 });
 
-btnReset.addEventListener("click", () => {
-  if (!confirm("Resetar tudo? Isso apaga todos os chamados.")) return;
-  tickets = [];
-  saveTickets();
-  resetForm();
-  toast("Sistema resetado ✅");
-  renderAll();
-});
-
-btnLogout.addEventListener("click", () => {
-  localStorage.removeItem(USER_KEY);
-  ensureUser();
-  toast("Você saiu e entrou novamente ✅");
-});
-
-// ===== Security / HTML escape =====
-function escapeHtml(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 // ===== Init =====
 (function init(){
   applyTheme();
-  ensureUser();
   resetForm();
   renderAll();
 })();
