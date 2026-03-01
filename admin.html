@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Martree Support | Admin</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="top">
+  <div class="topInner">
+    <div class="brand">
+      <div class="logo"><img src="assets/logo.png" alt="Logo da Empresa"></div>
+      <div>
+        <h1>Martree Support</h1>
+        <p class="muted">Admin • Usuários</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn ghost" id="btnBack" type="button">Voltar</button>
+      <button class="btn danger" id="btnLogout" type="button">Sair</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <div class="between">
+      <h2>Criar usuário</h2>
+      <span class="muted small" id="me"></span>
+    </div>
+
+    <div class="row3">
+      <div>
+        <label>Nome</label>
+        <input id="name" placeholder="Ex.: Ismael" />
+      </div>
+      <div>
+        <label>Usuário</label>
+        <input id="username" placeholder="Ex.: ismael" />
+      </div>
+      <div>
+        <label>Senha</label>
+        <input id="password" type="password" placeholder="mín. 4" />
+      </div>
+    </div>
+
+    <div class="row3">
+      <div>
+        <label>Função</label>
+        <select id="role">
+          <option value="user" selected>Usuário</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button class="btn full" id="btnCreate" type="button">Criar</button>
+      </div>
+      <div></div>
+    </div>
+
+    <p class="msg" id="msg"></p>
+  </section>
+
+  <section class="card">
+    <div class="between">
+      <h2>Usuários cadastrados</h2>
+      <span class="muted small" id="count"></span>
+    </div>
+
+    <div class="tableWrap">
+      <table class="table" style="min-width:720px;">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Usuário</th>
+            <th>Função</th>
+            <th>Criado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+  import { requireAuth, logout, listUsers, createUser, deleteUser } from "./auth.js";
+
+  const $ = (id) => document.getElementById(id);
+  const msg = $("msg");
+
+  function toast(text, ok=true){
+    msg.style.color = ok ? "#2ee59d" : "#ff3b3b";
+    msg.textContent = text;
+    if (text) setTimeout(()=> msg.textContent="", 2500);
+  }
+
+  const session = await requireAuth({ role: "admin", redirectTo: "login.html" });
+  $("me").textContent = `Logado como: ${session.name} (@${session.username})`;
+
+  $("btnLogout").addEventListener("click", () => logout("login.html"));
+  $("btnBack").addEventListener("click", () => location.href = "index.html");
+
+  function fmt(iso){
+    const d = new Date(iso);
+    const dd = String(d.getDate()).padStart(2,"0");
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const yy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mi = String(d.getMinutes()).padStart(2,"0");
+    return `${dd}/${mm}/${yy} ${hh}:${mi}`;
+  }
+
+  function render(){
+    const users = listUsers();
+    $("count").textContent = `${users.length} usuários`;
+
+    $("tbody").innerHTML = users.map(u => `
+      <tr>
+        <td>${u.name}</td>
+        <td>@${u.username}</td>
+        <td>${u.role}</td>
+        <td>${fmt(u.createdAt)}</td>
+        <td>
+          <div class="tActions">
+            <button class="linkBtn" data-del="${u.id}">Excluir</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    Array.from(document.querySelectorAll("[data-del]")).forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const id = btn.getAttribute("data-del");
+        if (!confirm("Excluir usuário?")) return;
+        const res = deleteUser(id);
+        if (!res.ok) return toast(res.error, false);
+        toast("Usuário removido ✅");
+        render();
+      });
+    });
+  }
+
+  $("btnCreate").addEventListener("click", async () => {
+    const payload = {
+      name: $("name").value,
+      username: $("username").value,
+      password: $("password").value,
+      role: $("role").value
+    };
+
+    const res = await createUser(payload);
+    if (!res.ok) return toast(res.error, false);
+
+    $("name").value = "";
+    $("username").value = "";
+    $("password").value = "";
+    $("role").value = "user";
+
+    toast("Usuário criado ✅");
+    render();
+  });
+
+  render();
+</script>
+
+</body>
+</html>
