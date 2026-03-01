@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HelpDesk Mini | Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap" style="max-width:520px">
+    <section class="card">
+      <h2>Login</h2>
+      <p class="muted">Acesse para abrir chamados.</p>
+
+      <label>Email</label>
+      <input id="email" placeholder="seuemail@exemplo.com" />
+
+      <label style="margin-top:10px">Senha</label>
+      <input id="pass" type="password" placeholder="sua senha" />
+
+      <div class="rowBtns">
+        <button class="btn full" id="btnLogin">Entrar</button>
+        <a class="btn ghost full" href="register.html" style="text-align:center; text-decoration:none;">Criar conta</a>
+      </div>
+
+      <p class="msg" id="msg"></p>
+    </section>
+  </main>
+
+  <script type="module">
+    import { login, getSession } from "./auth.js";
+
+    const $ = (id) => document.getElementById(id);
+    const msg = $("msg");
+
+    function setMsg(t, ok=true){
+      msg.textContent = t || "";
+      msg.style.color = ok ? "#2ee59d" : "#ff8080";
+    }
+
+    const ses = getSession();
+    if(ses?.userId){
+      location.href = "index.html";
+    }
+
+    $("btnLogin").addEventListener("click", () => {
+      const res = login({ email: $("email").value, password: $("pass").value });
+      if(!res.ok){ setMsg(res.msg, false); return; }
+      setMsg("Login OK! Indo para o sistema...", true);
+      setTimeout(() => location.href = "index.html", 500);
+    });
+  </script>
+</body>
+</html>
