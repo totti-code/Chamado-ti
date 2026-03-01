@@ -225,16 +225,15 @@ function renderCards(){
   renderKpis(all);
 
   const host = $("list");
-  if(!host){
-    // lista de cards removida do HTML → OK, não renderiza cards
-    return;
-  }
+  if(!host) return;
 
-  const list = applyFilters(all);
+  // ✅ sem filtro nos cards
+  const list = all.slice().sort((a,b) => b.createdAtMs - a.createdAtMs);
+
   host.innerHTML = "";
 
   if(list.length === 0){
-    host.innerHTML = `<div class="muted">Nenhum chamado encontrado com esses filtros.</div>`;
+    host.innerHTML = `<div class="muted">Nenhum chamado ainda.</div>`;
     return;
   }
 
@@ -706,8 +705,8 @@ $("btnCancel")?.addEventListener("click", () => {
 ["q","fStatus","fPriority","fCategory","fBranch","fPDV","sort"].forEach(id => {
   const el = $(id);
   if(!el) return;
-  el.addEventListener("input", renderAll);
-  el.addEventListener("change", renderAll);
+  el.addEventListener("input", renderQueue);   // ✅ só fila
+  el.addEventListener("change", renderQueue);  // ✅ só fila
 });
 
 $("btnClearFilters")?.addEventListener("click", () => {
@@ -718,7 +717,7 @@ $("btnClearFilters")?.addEventListener("click", () => {
   if($("fBranch")) $("fBranch").value = "Todos";
   if($("fPDV")) $("fPDV").value = "Todos";
   if($("sort")) $("sort").value = "atendimento";
-  renderAll();
+  renderQueue(); // ✅ só fila
 });
 
 $("btnSeed")?.addEventListener("click", seed);
