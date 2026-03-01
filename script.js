@@ -245,7 +245,9 @@ function renderCards(){
 /* ===== Fila (Tabela) ===== */
 function renderQueue(){
   const all = loadTickets();
-  const list = applyFilters(all); // respeita filtros atuais
+const filtered = applyFilters(all); // com filtros normais
+// REMOVE visualmente os resolvidos
+const list = filtered.filter(t => t.status !== "Resolvido");
   const body = $("queueBody");
   body.innerHTML = "";
 
