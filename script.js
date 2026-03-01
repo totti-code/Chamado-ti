@@ -1,7 +1,25 @@
+// script.js (MODULE)
+// ✅ Sem editar chamado
+// ✅ Login obrigatório via auth.js
+import { requireAuth, logout } from "./auth.js";
+
 const $ = (id) => document.getElementById(id);
 
 const STORAGE_KEY = "helpdeskmini_tickets_v1";
 const THEME_KEY = "helpdeskmini_theme_v1";
+
+// ===== Auth gate =====
+let session = null;
+try {
+  session = await requireAuth({ redirectTo: "login.html" });
+} catch (e) {
+  // requireAuth já redireciona
+}
+
+// ===== Header (opcionais, se existirem no HTML) =====
+const btnLogout = $("btnLogout");
+const btnAdmin = $("btnAdmin");
+const who = $("who");
 
 // ===== Elements =====
 const tabs = Array.from(document.querySelectorAll(".tab"));
@@ -13,9 +31,6 @@ const btnTheme = $("btnTheme");
 const form = $("form");
 const msg = $("msg");
 
-const formTitle = $("formTitle");
-const editingPill = $("editingPill");
-const btnCancel = $("btnCancel");
 const btnSeed = $("btnSeed");
 
 const titleEl = $("title");
@@ -62,17 +77,29 @@ const mMeta = $("mMeta");
 const mDesc = $("mDesc");
 const mTags = $("mTags");
 const mHistory = $("mHistory");
-const mEdit = $("mEdit");
 const mNext = $("mNext");
 const mDelete = $("mDelete");
 
 // ===== State =====
 let tickets = loadTickets();
-let editingId = null;
 let viewingId = null;
+
+// ===== Header wiring =====
+if (who && session) {
+  who.textContent = `👤 ${session.name} (@${session.username})`;
+}
+if (btnLogout) {
+  btnLogout.addEventListener("click", () => logout("login.html"));
+}
+if (btnAdmin) {
+  const isAdmin = session?.role === "admin";
+  btnAdmin.style.display = isAdmin ? "inline-flex" : "none";
+  btnAdmin.addEventListener("click", () => (location.href = "admin.html"));
+}
 
 // ===== Utils =====
 function toast(text, ok = true) {
+  if (!msg) return;
   msg.style.color = ok ? "#2ee59d" : "#ff3b3b";
   msg.textContent = text;
   if (text) setTimeout(() => (msg.textContent = ""), 2500);
@@ -109,9 +136,9 @@ function statusNext(s) {
 }
 
 function normalizeTags(raw) {
-  return raw
+  return String(raw || "")
     .split(",")
-    .map(t => t.trim())
+    .map((t) => t.trim())
     .filter(Boolean)
     .slice(0, 12);
 }
@@ -150,38 +177,33 @@ function saveTheme(t) {
 
 // ===== Tabs =====
 function setTab(tabId) {
-  tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
-  tabChamados.classList.toggle("hidden", tabId !== "tabChamados");
-  tabFila.classList.toggle("hidden", tabId !== "tabFila");
+  tabs.forEach((b) => b.classList.toggle("active", b.dataset.tab === tabId));
+  if (tabChamados) tabChamados.classList.toggle("hidden", tabId !== "tabChamados");
+  if (tabFila) tabFila.classList.toggle("hidden", tabId !== "tabFila");
 }
 
-tabs.forEach(b => {
+tabs.forEach((b) => {
   b.addEventListener("click", () => setTab(b.dataset.tab));
 });
 
 // ===== CRUD =====
 function resetForm() {
-  editingId = null;
-  formTitle.textContent = "Abrir chamado";
-  editingPill.hidden = true;
-  btnCancel.hidden = true;
-
-  titleEl.value = "";
-  requesterEl.value = "";
-  descEl.value = "";
-  branchEl.value = "1";
-  pdvEl.value = "1";
-  categoryEl.value = "PDV";
-  priorityEl.value = "Média";
-  statusEl.value = "Aberto";
-  assignedToEl.value = "";
-  tagsEl.value = "";
+  if (titleEl) titleEl.value = "";
+  if (requesterEl) requesterEl.value = "";
+  if (descEl) descEl.value = "";
+  if (branchEl) branchEl.value = "1";
+  if (pdvEl) pdvEl.value = "1";
+  if (categoryEl) categoryEl.value = "PDV";
+  if (priorityEl) priorityEl.value = "Média";
+  if (statusEl) statusEl.value = "Aberto";
+  if (assignedToEl) assignedToEl.value = "";
+  if (tagsEl) tagsEl.value = "";
 }
 
 function getFormData() {
-  const title = safeText(titleEl.value);
-  const requester = safeText(requesterEl.value);
-  const desc = safeText(descEl.value);
+  const title = safeText(titleEl?.value);
+  const requester = safeText(requesterEl?.value);
+  const desc = safeText(descEl?.value);
 
   if (!title) return { error: "Preencha o título." };
   if (!requester) return { error: "Preencha o solicitante." };
@@ -191,13 +213,13 @@ function getFormData() {
     title,
     requester,
     desc,
-    branch: branchEl.value,
-    pdv: pdvEl.value,
-    category: categoryEl.value,
-    priority: priorityEl.value,
-    status: statusEl.value,
-    assignedTo: safeText(assignedToEl.value),
-    tags: normalizeTags(tagsEl.value),
+    branch: branchEl?.value || "1",
+    pdv: pdvEl?.value || "1",
+    category: categoryEl?.value || "PDV",
+    priority: priorityEl?.value || "Média",
+    status: statusEl?.value || "Aberto",
+    assignedTo: safeText(assignedToEl?.value),
+    tags: normalizeTags(tagsEl?.value),
   };
   return { data };
 }
@@ -206,41 +228,26 @@ function addHistory(t, action) {
   t.history = Array.isArray(t.history) ? t.history : [];
   t.history.unshift({
     at: nowISO(),
-    action
+    action,
   });
 }
 
-form.addEventListener("submit", (e) => {
+// ✅ SEM edição: sempre cria um novo chamado
+form?.addEventListener("submit", (e) => {
   e.preventDefault();
 
   const { data, error } = getFormData();
   if (error) return toast(error, false);
-
-  if (editingId) {
-    const idx = tickets.findIndex(t => t.id === editingId);
-    if (idx === -1) return toast("Chamado não encontrado.", false);
-
-    tickets[idx] = {
-      ...tickets[idx],
-      ...data,
-      updatedAt: nowISO()
-    };
-    addHistory(tickets[idx], "Chamado editado");
-    saveTickets();
-    toast("Chamado atualizado ✅");
-    resetForm();
-    renderAll();
-    return;
-  }
 
   const t = {
     id: uid(),
     createdAt: nowISO(),
     updatedAt: nowISO(),
     ...data,
-    history: []
+    history: [],
   };
-  addHistory(t, "Chamado criado");
+
+  addHistory(t, `Chamado criado por ${session?.username || "usuário"}`);
 
   tickets.unshift(t);
   saveTickets();
@@ -249,45 +256,55 @@ form.addEventListener("submit", (e) => {
   renderAll();
 });
 
-btnCancel.addEventListener("click", () => {
-  resetForm();
-  toast("Edição cancelada.");
-});
-
-btnSeed.addEventListener("click", () => {
+btnSeed?.addEventListener("click", () => {
   const examples = [
     {
       title: "PDV 2 não imprime NFC-e",
       requester: "Ismael",
       desc: "Ao finalizar a venda, a NFC-e fica pendente e não imprime. Verificar impressora/serviço.",
-      branch: "2", pdv: "2", category: "PDV", priority: "Alta", status: "Aberto",
-      assignedTo: "TI", tags: ["nfc-e", "pdv", "impressora"]
+      branch: "2",
+      pdv: "2",
+      category: "PDV",
+      priority: "Alta",
+      status: "Aberto",
+      assignedTo: "TI",
+      tags: ["nfc-e", "pdv", "impressora"],
     },
     {
       title: "Queda de rede na Filial 4",
       requester: "Maria",
       desc: "Perda de conexão intermitente. Caixa perde acesso ao sistema em horários aleatórios.",
-      branch: "4", pdv: "1", category: "Rede", priority: "Alta", status: "Em andamento",
-      assignedTo: "CPD", tags: ["rede", "switch", "link"]
+      branch: "4",
+      pdv: "1",
+      category: "Rede",
+      priority: "Alta",
+      status: "Em andamento",
+      assignedTo: "CPD",
+      tags: ["rede", "switch", "link"],
     },
     {
       title: "Sistema lento no PDV 5",
       requester: "João",
       desc: "Sistema demora muito para abrir a tela de pagamento. Possível problema de banco/rede.",
-      branch: "1", pdv: "5", category: "Sistema", priority: "Média", status: "Aberto",
-      assignedTo: "TI", tags: ["lento", "pdv"]
+      branch: "1",
+      pdv: "5",
+      category: "Sistema",
+      priority: "Média",
+      status: "Aberto",
+      assignedTo: "TI",
+      tags: ["lento", "pdv"],
     },
   ];
 
-  examples.forEach(ex => {
+  examples.forEach((ex) => {
     const t = {
       id: uid(),
       createdAt: nowISO(),
       updatedAt: nowISO(),
       ...ex,
-      history: []
+      history: [],
     };
-    addHistory(t, "Chamado criado (exemplo)");
+    addHistory(t, `Chamado criado (exemplo) por ${session?.username || "usuário"}`);
     tickets.unshift(t);
   });
 
@@ -298,38 +315,38 @@ btnSeed.addEventListener("click", () => {
 
 // ===== Filters =====
 function getFilteredTickets() {
-  const q = safeText(qEl.value).toLowerCase();
-  const fs = fStatusEl.value;
-  const fp = fPriorityEl.value;
-  const fb = fBranchEl.value;
-  const fpdv = fPDVEl.value;
-  const fc = fCategoryEl.value;
+  const q = safeText(qEl?.value).toLowerCase();
+  const fs = fStatusEl?.value || "Todos";
+  const fp = fPriorityEl?.value || "Todos";
+  const fb = fBranchEl?.value || "Todos";
+  const fpdv = fPDVEl?.value || "Todos";
+  const fc = fCategoryEl?.value || "Todos";
 
   let arr = [...tickets];
 
   if (q) {
-    arr = arr.filter(t => {
-      const hay = [
-        t.title, t.desc, t.requester, t.assignedTo,
-        ...(t.tags || [])
-      ].join(" ").toLowerCase();
+    arr = arr.filter((t) => {
+      const hay = [t.title, t.desc, t.requester, t.assignedTo, ...(t.tags || [])]
+        .join(" ")
+        .toLowerCase();
       return hay.includes(q);
     });
   }
 
-  if (fs !== "Todos") arr = arr.filter(t => t.status === fs);
-  if (fp !== "Todos") arr = arr.filter(t => t.priority === fp);
-  if (fb !== "Todos") arr = arr.filter(t => t.branch === fb);
-  if (fpdv !== "Todos") arr = arr.filter(t => t.pdv === fpdv);
-  if (fc !== "Todos") arr = arr.filter(t => t.category === fc);
+  if (fs !== "Todos") arr = arr.filter((t) => t.status === fs);
+  if (fp !== "Todos") arr = arr.filter((t) => t.priority === fp);
+  if (fb !== "Todos") arr = arr.filter((t) => t.branch === fb);
+  if (fpdv !== "Todos") arr = arr.filter((t) => t.pdv === fpdv);
+  if (fc !== "Todos") arr = arr.filter((t) => t.category === fc);
 
-  const s = sortEl.value;
+  const s = sortEl?.value || "atendimento";
   if (s === "novo") {
-    arr.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   } else if (s === "antigo") {
-    arr.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+    arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   } else {
-    arr.sort((a,b) => {
+    // prioridade desc + tempo asc
+    arr.sort((a, b) => {
       const pw = priWeight(b.priority) - priWeight(a.priority);
       if (pw !== 0) return pw;
       return new Date(a.createdAt) - new Date(b.createdAt);
@@ -339,19 +356,20 @@ function getFilteredTickets() {
   return arr;
 }
 
-[qEl, fStatusEl, fPriorityEl, fBranchEl, fPDVEl, fCategoryEl, sortEl].forEach(el => {
+[qEl, fStatusEl, fPriorityEl, fBranchEl, fPDVEl, fCategoryEl, sortEl].forEach((el) => {
+  if (!el) return;
   el.addEventListener("input", renderAll);
   el.addEventListener("change", renderAll);
 });
 
-btnClearFilters.addEventListener("click", () => {
-  qEl.value = "";
-  fStatusEl.value = "Todos";
-  fPriorityEl.value = "Todos";
-  fBranchEl.value = "Todos";
-  fPDVEl.value = "Todos";
-  fCategoryEl.value = "Todos";
-  sortEl.value = "atendimento";
+btnClearFilters?.addEventListener("click", () => {
+  if (qEl) qEl.value = "";
+  if (fStatusEl) fStatusEl.value = "Todos";
+  if (fPriorityEl) fPriorityEl.value = "Todos";
+  if (fBranchEl) fBranchEl.value = "Todos";
+  if (fPDVEl) fPDVEl.value = "Todos";
+  if (fCategoryEl) fCategoryEl.value = "Todos";
+  if (sortEl) sortEl.value = "atendimento";
   renderAll();
 });
 
@@ -368,28 +386,32 @@ function badgePri(p) {
 }
 
 function renderKPIs() {
-  const open = tickets.filter(t => t.status === "Aberto").length;
-  const prog = tickets.filter(t => t.status === "Em andamento").length;
-  const done = tickets.filter(t => t.status === "Resolvido").length;
-  kpiOpen.textContent = open;
-  kpiProg.textContent = prog;
-  kpiDone.textContent = done;
-  kpiTotal.textContent = tickets.length;
+  const open = tickets.filter((t) => t.status === "Aberto").length;
+  const prog = tickets.filter((t) => t.status === "Em andamento").length;
+  const done = tickets.filter((t) => t.status === "Resolvido").length;
+  if (kpiOpen) kpiOpen.textContent = open;
+  if (kpiProg) kpiProg.textContent = prog;
+  if (kpiDone) kpiDone.textContent = done;
+  if (kpiTotal) kpiTotal.textContent = tickets.length;
 }
 
 function renderCards() {
   const recent = [...tickets]
-    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 8);
 
-  countEl.textContent = `${tickets.length} no total`;
+  if (countEl) countEl.textContent = `${tickets.length} no total`;
+
+  if (!listEl) return;
 
   if (!recent.length) {
     listEl.innerHTML = `<p class="muted small">Nenhum chamado ainda. Crie um no formulário.</p>`;
     return;
   }
 
-  listEl.innerHTML = recent.map(t => `
+  listEl.innerHTML = recent
+    .map(
+      (t) => `
     <div class="item" data-id="${t.id}">
       <div class="itemTop">
         <p class="itemTitle">${escapeHtml(t.title)}</p>
@@ -403,12 +425,17 @@ function renderCards() {
         <div>👤 ${escapeHtml(t.requester)} • 🕒 ${fmtDate(t.createdAt)}</div>
       </div>
       <div class="tags">
-        ${(t.tags || []).slice(0,5).map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`).join("")}
+        ${(t.tags || [])
+          .slice(0, 5)
+          .map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`)
+          .join("")}
       </div>
     </div>
-  `).join("");
+  `
+    )
+    .join("");
 
-  Array.from(listEl.querySelectorAll(".item")).forEach(card => {
+  Array.from(listEl.querySelectorAll(".item")).forEach((card) => {
     card.addEventListener("click", () => openModal(card.dataset.id));
   });
 }
@@ -416,8 +443,10 @@ function renderCards() {
 function renderTable() {
   const arr = getFilteredTickets();
 
-  queueCount.textContent = `${arr.length} encontrados`;
-  tableCount.textContent = `${arr.length} na tabela`;
+  if (queueCount) queueCount.textContent = `${arr.length} encontrados`;
+  if (tableCount) tableCount.textContent = `${arr.length} na tabela`;
+
+  if (!queueBody) return;
 
   if (!arr.length) {
     queueBody.innerHTML = `
@@ -428,9 +457,12 @@ function renderTable() {
     return;
   }
 
-  queueBody.innerHTML = arr.map((t, i) => `
+  // ✅ SEM "Editar" na tabela
+  queueBody.innerHTML = arr
+    .map(
+      (t, i) => `
     <tr>
-      <td>${i+1}</td>
+      <td>${i + 1}</td>
       <td>${fmtDate(t.createdAt)}</td>
       <td>${escapeHtml(t.id)}</td>
       <td>${escapeHtml(t.branch)}</td>
@@ -444,20 +476,20 @@ function renderTable() {
       <td>
         <div class="tActions">
           <button class="linkBtn" data-act="view" data-id="${t.id}">Ver</button>
-          <button class="linkBtn" data-act="edit" data-id="${t.id}">Editar</button>
           <button class="linkBtn" data-act="next" data-id="${t.id}">Avançar</button>
         </div>
       </td>
     </tr>
-  `).join("");
+  `
+    )
+    .join("");
 
-  Array.from(queueBody.querySelectorAll("button")).forEach(btn => {
+  Array.from(queueBody.querySelectorAll("button")).forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const id = btn.dataset.id;
       const act = btn.dataset.act;
       if (act === "view") openModal(id);
-      if (act === "edit") startEdit(id);
       if (act === "next") nextStatus(id);
     });
   });
@@ -471,97 +503,86 @@ function renderAll() {
 
 // ===== Modal =====
 function openModal(id) {
-  const t = tickets.find(x => x.id === id);
+  const t = tickets.find((x) => x.id === id);
   if (!t) return;
 
   viewingId = id;
 
-  mTitle.textContent = t.title;
+  if (mTitle) mTitle.textContent = t.title;
 
-  mMeta.innerHTML = `
-    <span class="badge ${badgeStatus(t.status)}">${escapeHtml(t.status)}</span>
-    <span class="badge ${badgePri(t.priority)}">${escapeHtml(t.priority)}</span>
-    <span class="badge">Filial ${escapeHtml(t.branch)}</span>
-    <span class="badge">PDV ${escapeHtml(t.pdv)}</span>
-    <span class="badge">${escapeHtml(t.category)}</span>
-    <span class="badge">Solic.: ${escapeHtml(t.requester)}</span>
-    <span class="badge">Resp.: ${escapeHtml(t.assignedTo || "-")}</span>
-    <span class="badge">Criado: ${fmtDate(t.createdAt)}</span>
-  `;
+  if (mMeta) {
+    mMeta.innerHTML = `
+      <span class="badge ${badgeStatus(t.status)}">${escapeHtml(t.status)}</span>
+      <span class="badge ${badgePri(t.priority)}">${escapeHtml(t.priority)}</span>
+      <span class="badge">Filial ${escapeHtml(t.branch)}</span>
+      <span class="badge">PDV ${escapeHtml(t.pdv)}</span>
+      <span class="badge">${escapeHtml(t.category)}</span>
+      <span class="badge">Solic.: ${escapeHtml(t.requester)}</span>
+      <span class="badge">Resp.: ${escapeHtml(t.assignedTo || "-")}</span>
+      <span class="badge">Criado: ${fmtDate(t.createdAt)}</span>
+    `;
+  }
 
-  mDesc.textContent = t.desc || "";
-  mTags.innerHTML = (t.tags || []).map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`).join("");
+  if (mDesc) mDesc.textContent = t.desc || "";
+
+  if (mTags) {
+    mTags.innerHTML = (t.tags || [])
+      .map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`)
+      .join("");
+  }
 
   const hist = Array.isArray(t.history) ? t.history : [];
-  mHistory.innerHTML = hist.length
-    ? hist.map(h => `<div class="hItem">🕒 ${fmtDate(h.at)} — ${escapeHtml(h.action)}</div>`).join("")
-    : `<div class="hItem">Sem histórico ainda.</div>`;
+  if (mHistory) {
+    mHistory.innerHTML = hist.length
+      ? hist
+          .map((h) => `<div class="hItem">🕒 ${fmtDate(h.at)} — ${escapeHtml(h.action)}</div>`)
+          .join("")
+      : `<div class="hItem">Sem histórico ainda.</div>`;
+  }
 
-  modal.showModal();
+  modal?.showModal();
 }
 
-mClose.addEventListener("click", () => modal.close());
-modal.addEventListener("click", (e) => {
+mClose?.addEventListener("click", () => modal.close());
+modal?.addEventListener("click", (e) => {
   if (e.target === modal) modal.close();
 });
 
-mEdit.addEventListener("click", () => {
-  if (!viewingId) return;
-  modal.close();
-  setTab("tabChamados");
-  startEdit(viewingId);
-});
-
-mNext.addEventListener("click", () => {
+mNext?.addEventListener("click", () => {
   if (!viewingId) return;
   nextStatus(viewingId);
   openModal(viewingId);
 });
 
-mDelete.addEventListener("click", () => {
+mDelete?.addEventListener("click", () => {
   if (!viewingId) return;
+
+  // ✅ recomendado: só admin pode excluir
+  if (session?.role !== "admin") {
+    return toast("Somente admin pode excluir chamados.", false);
+  }
+
   if (!confirm("Tem certeza que deseja excluir este chamado?")) return;
 
-  tickets = tickets.filter(x => x.id !== viewingId);
+  tickets = tickets.filter((x) => x.id !== viewingId);
   saveTickets();
   modal.close();
   toast("Chamado excluído ✅");
   renderAll();
 });
 
-// ===== Edit / Next =====
-function startEdit(id) {
-  const t = tickets.find(x => x.id === id);
-  if (!t) return toast("Chamado não encontrado.", false);
-
-  editingId = id;
-  formTitle.textContent = "Editar chamado";
-  editingPill.hidden = false;
-  btnCancel.hidden = false;
-
-  titleEl.value = t.title || "";
-  requesterEl.value = t.requester || "";
-  descEl.value = t.desc || "";
-  branchEl.value = t.branch || "1";
-  pdvEl.value = t.pdv || "1";
-  categoryEl.value = t.category || "PDV";
-  priorityEl.value = t.priority || "Média";
-  statusEl.value = t.status || "Aberto";
-  assignedToEl.value = t.assignedTo || "";
-  tagsEl.value = (t.tags || []).join(", ");
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
+// ===== Next =====
 function nextStatus(id) {
-  const idx = tickets.findIndex(t => t.id === id);
+  const idx = tickets.findIndex((t) => t.id === id);
   if (idx === -1) return toast("Chamado não encontrado.", false);
 
   const t = tickets[idx];
   const old = t.status;
+
   t.status = statusNext(t.status);
   t.updatedAt = nowISO();
-  addHistory(t, `Status alterado: ${old} → ${t.status}`);
+
+  addHistory(t, `Status: ${old} → ${t.status} (por ${session?.username || "usuário"})`);
 
   saveTickets();
   toast("Status atualizado ✅");
@@ -581,12 +602,12 @@ function downloadFile(filename, content, mime) {
   URL.revokeObjectURL(url);
 }
 
-btnExportJSON.addEventListener("click", () => {
+btnExportJSON?.addEventListener("click", () => {
   const data = JSON.stringify(tickets, null, 2);
   downloadFile("helpdeskmini_backup.json", data, "application/json");
 });
 
-importJSON.addEventListener("change", async (e) => {
+importJSON?.addEventListener("change", async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   try {
@@ -594,7 +615,7 @@ importJSON.addEventListener("change", async (e) => {
     const data = JSON.parse(text);
 
     if (!Array.isArray(data)) throw new Error("JSON inválido (não é array).");
-    const ok = data.every(x => x && typeof x === "object" && x.id && x.title);
+    const ok = data.every((x) => x && typeof x === "object" && x.id && x.title);
     if (!ok) throw new Error("JSON inválido (estrutura inesperada).");
 
     tickets = data;
@@ -608,16 +629,27 @@ importJSON.addEventListener("change", async (e) => {
   }
 });
 
-btnExportCSV.addEventListener("click", () => {
+btnExportCSV?.addEventListener("click", () => {
   const arr = getFilteredTickets();
 
   const header = [
-    "#","Data","ID","Filial","PDV","Status","Prioridade","Categoria",
-    "Título","Solicitante","Responsável","Tags","Descrição"
+    "#",
+    "Data",
+    "ID",
+    "Filial",
+    "PDV",
+    "Status",
+    "Prioridade",
+    "Categoria",
+    "Título",
+    "Solicitante",
+    "Responsável",
+    "Tags",
+    "Descrição",
   ];
 
   const rows = arr.map((t, i) => [
-    i+1,
+    i + 1,
     fmtDate(t.createdAt),
     t.id,
     `Filial ${t.branch}`,
@@ -629,11 +661,11 @@ btnExportCSV.addEventListener("click", () => {
     t.requester,
     t.assignedTo || "",
     (t.tags || []).join(" | "),
-    t.desc
+    t.desc,
   ]);
 
   const csv = [header, ...rows]
-    .map(r => r.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(";"))
+    .map((r) => r.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(";"))
     .join("\n");
 
   downloadFile("helpdeskmini_chamados.csv", csv, "text/csv;charset=utf-8");
@@ -644,7 +676,7 @@ function applyTheme() {
   const t = loadTheme();
   document.body.classList.toggle("light", t === "light");
 }
-btnTheme.addEventListener("click", () => {
+btnTheme?.addEventListener("click", () => {
   const current = loadTheme();
   const next = current === "dark" ? "light" : "dark";
   saveTheme(next);
@@ -652,7 +684,7 @@ btnTheme.addEventListener("click", () => {
 });
 
 // ===== Init =====
-(function init(){
+(function init() {
   applyTheme();
   resetForm();
   renderAll();
