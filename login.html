@@ -3,52 +3,78 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>HelpDesk Mini | Login</title>
+  <title>Martree Support | Login</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="wrap" style="max-width:520px">
-    <section class="card">
-      <h2>Login</h2>
-      <p class="muted">Acesse para abrir chamados.</p>
 
-      <label>Email</label>
-      <input id="email" placeholder="seuemail@exemplo.com" />
-
-      <label style="margin-top:10px">Senha</label>
-      <input id="pass" type="password" placeholder="sua senha" />
-
-      <div class="rowBtns">
-        <button class="btn full" id="btnLogin">Entrar</button>
-        <a class="btn ghost full" href="register.html" style="text-align:center; text-decoration:none;">Criar conta</a>
+<header class="top">
+  <div class="topInner">
+    <div class="brand">
+      <div class="logo"><img src="assets/logo.png" alt="Logo da Empresa"></div>
+      <div>
+        <h1>Martree Support</h1>
+        <p class="muted">Acesso ao sistema</p>
       </div>
+    </div>
+  </div>
+</header>
 
-      <p class="msg" id="msg"></p>
-    </section>
-  </main>
+<main class="wrap">
+  <section class="card" style="max-width:520px;margin:0 auto;">
+    <h2>Entrar</h2>
 
-  <script type="module">
-    import { login, getSession } from "./auth.js";
+    <label>Usuário</label>
+    <input id="username" placeholder="Ex.: ismael" autocomplete="username" />
 
-    const $ = (id) => document.getElementById(id);
-    const msg = $("msg");
+    <label style="margin-top:10px;">Senha</label>
+    <input id="password" type="password" placeholder="••••••" autocomplete="current-password" />
 
-    function setMsg(t, ok=true){
-      msg.textContent = t || "";
-      msg.style.color = ok ? "#2ee59d" : "#ff8080";
-    }
+    <div class="rowBtns">
+      <button class="btn" id="btnLogin" type="button">Entrar</button>
+    </div>
 
-    const ses = getSession();
-    if(ses?.userId){
-      location.href = "index.html";
-    }
+    <p class="msg" id="msg"></p>
 
-    $("btnLogin").addEventListener("click", () => {
-      const res = login({ email: $("email").value, password: $("pass").value });
-      if(!res.ok){ setMsg(res.msg, false); return; }
-      setMsg("Login OK! Indo para o sistema...", true);
-      setTimeout(() => location.href = "index.html", 500);
+    <p class="muted small" style="margin-top:10px;">
+      Primeiro acesso: <b>admin</b> / <b>admin123</b> (troque depois no Admin).
+    </p>
+  </section>
+</main>
+
+<script type="module">
+  import { login, getSession } from "./auth.js";
+
+  const $ = (id) => document.getElementById(id);
+  const msg = $("msg");
+
+  // se já estiver logado, manda pro sistema
+  const s = getSession();
+  if (s) location.href = "index.html";
+
+  function toast(text, ok=true){
+    msg.style.color = ok ? "#2ee59d" : "#ff3b3b";
+    msg.textContent = text;
+    if (text) setTimeout(()=> msg.textContent="", 2500);
+  }
+
+  $("btnLogin").addEventListener("click", async () => {
+    const username = $("username").value;
+    const password = $("password").value;
+
+    const res = await login(username, password);
+    if (!res.ok) return toast(res.error, false);
+
+    toast("Logado ✅");
+    location.href = "index.html";
+  });
+
+  // enter para logar
+  ["username","password"].forEach(id=>{
+    $(id).addEventListener("keydown", (e)=>{
+      if(e.key==="Enter") $("btnLogin").click();
     });
-  </script>
+  });
+</script>
 </body>
 </html>
