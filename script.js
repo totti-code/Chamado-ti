@@ -65,6 +65,7 @@ function savePrefs(prefs){
 
 function setMsg(text, ok=true){
   const el = $("msg");
+  if(!el) return;
   el.textContent = text || "";
   el.style.color = ok ? "#2ee59d" : "#ff8080";
   if(text){
@@ -102,16 +103,16 @@ function addHistory(ticket, action){
 
 function formData(){
   return {
-    title: $("title").value.trim(),
-    requester: $("requester").value.trim(),
-    desc: $("desc").value.trim(),
-    branch: $("branch").value,     // 1..7
-    pdv: $("pdv").value,           // 1..5
-    category: $("category").value,
-    priority: $("priority").value,
-    status: $("status").value,
-    assignedTo: $("assignedTo").value.trim(),
-    tags: parseTags($("tags").value)
+    title: $("title")?.value.trim() || "",
+    requester: $("requester")?.value.trim() || "",
+    desc: $("desc")?.value.trim() || "",
+    branch: $("branch")?.value || "1",     // 1..7
+    pdv: $("pdv")?.value || "1",           // 1..5
+    category: $("category")?.value || "PDV",
+    priority: $("priority")?.value || "Média",
+    status: $("status")?.value || "Aberto",
+    assignedTo: $("assignedTo")?.value.trim() || "",
+    tags: parseTags($("tags")?.value || "")
   };
 }
 
@@ -125,50 +126,50 @@ function validate(data){
 }
 
 function clearForm(){
-  $("form").reset();
-  $("status").value = "Aberto";
-  $("priority").value = "Média";
-  $("category").value = "PDV";
-  $("branch").value = "1";
-  $("pdv").value = "1";
+  $("form")?.reset();
+  if($("status")) $("status").value = "Aberto";
+  if($("priority")) $("priority").value = "Média";
+  if($("category")) $("category").value = "PDV";
+  if($("branch")) $("branch").value = "1";
+  if($("pdv")) $("pdv").value = "1";
   editingId = null;
 
-  $("formTitle").textContent = "Abrir chamado";
-  $("btnCancel").hidden = true;
-  $("editingPill").hidden = true;
-  $("btnSave").textContent = "Salvar chamado";
+  if($("formTitle")) $("formTitle").textContent = "Abrir chamado";
+  if($("btnCancel")) $("btnCancel").hidden = true;
+  if($("editingPill")) $("editingPill").hidden = true;
+  if($("btnSave")) $("btnSave").textContent = "Salvar chamado";
 }
 
 function fillForm(ticket){
-  $("title").value = ticket.title;
-  $("requester").value = ticket.requester;
-  $("desc").value = ticket.desc;
+  if($("title")) $("title").value = ticket.title;
+  if($("requester")) $("requester").value = ticket.requester;
+  if($("desc")) $("desc").value = ticket.desc;
 
-  $("branch").value = String(ticket.branch || "1");
-  $("pdv").value = String(ticket.pdv || "1");
+  if($("branch")) $("branch").value = String(ticket.branch || "1");
+  if($("pdv")) $("pdv").value = String(ticket.pdv || "1");
 
-  $("category").value = ticket.category;
-  $("priority").value = ticket.priority;
-  $("status").value = ticket.status;
-  $("assignedTo").value = ticket.assignedTo || "";
-  $("tags").value = (ticket.tags || []).join(", ");
+  if($("category")) $("category").value = ticket.category;
+  if($("priority")) $("priority").value = ticket.priority;
+  if($("status")) $("status").value = ticket.status;
+  if($("assignedTo")) $("assignedTo").value = ticket.assignedTo || "";
+  if($("tags")) $("tags").value = (ticket.tags || []).join(", ");
 
   editingId = ticket.id;
-  $("formTitle").textContent = "Editar chamado";
-  $("btnCancel").hidden = false;
-  $("editingPill").hidden = false;
-  $("btnSave").textContent = "Atualizar chamado";
+  if($("formTitle")) $("formTitle").textContent = "Editar chamado";
+  if($("btnCancel")) $("btnCancel").hidden = false;
+  if($("editingPill")) $("editingPill").hidden = false;
+  if($("btnSave")) $("btnSave").textContent = "Atualizar chamado";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /* ===== Filtros (inclui Filial/PDV) ===== */
 function applyFilters(list){
-  const q = $("q").value.trim().toLowerCase();
-  const fStatus = $("fStatus").value;
-  const fPriority = $("fPriority").value;
-  const fCategory = $("fCategory").value;
-  const fBranch = $("fBranch").value;
-  const fPDV = $("fPDV").value;
+  const q = ($("q")?.value || "").trim().toLowerCase();
+  const fStatus = $("fStatus")?.value || "Todos";
+  const fPriority = $("fPriority")?.value || "Todos";
+  const fCategory = $("fCategory")?.value || "Todos";
+  const fBranch = $("fBranch")?.value || "Todos";
+  const fPDV = $("fPDV")?.value || "Todos";
 
   let out = list;
 
@@ -190,7 +191,7 @@ function applyFilters(list){
     });
   }
 
-  const sort = $("sort").value;
+  const sort = $("sort")?.value || "atendimento";
 
   if(sort === "novo"){
     out = out.slice().sort((a,b) => b.createdAtMs - a.createdAtMs);
@@ -204,23 +205,32 @@ function applyFilters(list){
     });
   }
 
-  $("count").textContent = `${out.length} exibido(s)`;
+  // ✅ Só atualiza o contador se ele existir (pra não quebrar)
+  const countEl = $("count");
+  if(countEl) countEl.textContent = `${out.length} exibido(s)`;
+
   return out;
 }
 
 function renderKpis(list){
-  $("kpiOpen").textContent = list.filter(t => t.status === "Aberto").length;
-  $("kpiProg").textContent = list.filter(t => t.status === "Em andamento").length;
-  $("kpiDone").textContent = list.filter(t => t.status === "Resolvido").length;
-  $("kpiTotal").textContent = list.length;
+  if($("kpiOpen")) $("kpiOpen").textContent = list.filter(t => t.status === "Aberto").length;
+  if($("kpiProg")) $("kpiProg").textContent = list.filter(t => t.status === "Em andamento").length;
+  if($("kpiDone")) $("kpiDone").textContent = list.filter(t => t.status === "Resolvido").length;
+  if($("kpiTotal")) $("kpiTotal").textContent = list.length;
 }
 
+/* ✅ Cards agora são opcionais (se #list não existir, não quebra) */
 function renderCards(){
   const all = loadTickets();
   renderKpis(all);
 
-  const list = applyFilters(all);
   const host = $("list");
+  if(!host){
+    // lista de cards removida do HTML → OK, não renderiza cards
+    return;
+  }
+
+  const list = applyFilters(all);
   host.innerHTML = "";
 
   if(list.length === 0){
@@ -268,9 +278,12 @@ function renderQueue(){
   const list = filtered.filter(t => t.status !== "Resolvido");
 
   const body = $("queueBody");
+  if(!body) return;
+
   body.innerHTML = "";
 
-  $("queueCount").textContent = `${list.length} na fila (com filtros atuais)`;
+  const qc = $("queueCount");
+  if(qc) qc.textContent = `${list.length} na fila (com filtros atuais)`;
 
   for(let i = 0; i < list.length; i++){
     const t = list[i];
@@ -317,33 +330,35 @@ function openModal(id){
 
   modalId = id;
 
-  $("mTitle").textContent = `${t.title} (${t.id})`;
+  if($("mTitle")) $("mTitle").textContent = `${t.title} (${t.id})`;
 
-  $("mMeta").innerHTML = `
-    <span class="badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span>
-    <span class="badge ${priorityClass(t.priority)}">${escapeHtml(t.priority)}</span>
-    <span class="badge">Filial ${escapeHtml(t.branch)}</span>
-    <span class="badge">PDV ${escapeHtml(t.pdv)}</span>
-    <span class="badge">${escapeHtml(t.category)}</span>
-    <span class="badge">Solic.: ${escapeHtml(t.requester)}</span>
-    <span class="badge">Resp.: ${escapeHtml(t.assignedTo || "-")}</span>
-    <span class="badge">Criado: ${escapeHtml(t.createdAt)}</span>
-  `;
+  if($("mMeta")){
+    $("mMeta").innerHTML = `
+      <span class="badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span>
+      <span class="badge ${priorityClass(t.priority)}">${escapeHtml(t.priority)}</span>
+      <span class="badge">Filial ${escapeHtml(t.branch)}</span>
+      <span class="badge">PDV ${escapeHtml(t.pdv)}</span>
+      <span class="badge">${escapeHtml(t.category)}</span>
+      <span class="badge">Solic.: ${escapeHtml(t.requester)}</span>
+      <span class="badge">Resp.: ${escapeHtml(t.assignedTo || "-")}</span>
+      <span class="badge">Criado: ${escapeHtml(t.createdAt)}</span>
+    `;
+  }
 
-  $("mDesc").textContent = t.desc;
+  if($("mDesc")) $("mDesc").textContent = t.desc;
 
   const tags = (t.tags || []).map(x => `<span class="tag">#${escapeHtml(x)}</span>`).join("");
-  $("mTags").innerHTML = tags || `<span class="muted small">Sem tags</span>`;
+  if($("mTags")) $("mTags").innerHTML = tags || `<span class="muted small">Sem tags</span>`;
 
   const hist = (t.history || []).slice().reverse().map(h =>
     `<div class="hItem"><strong>${escapeHtml(h.at)}</strong> — ${escapeHtml(h.action)}</div>`
   ).join("");
-  $("mHistory").innerHTML = hist || `<div class="muted small">Sem histórico ainda.</div>`;
+  if($("mHistory")) $("mHistory").innerHTML = hist || `<div class="muted small">Sem histórico ainda.</div>`;
 
-  $("modal").showModal();
+  $("modal")?.showModal();
 }
 function closeModal(){
-  $("modal").close();
+  $("modal")?.close();
   modalId = null;
 }
 
@@ -616,7 +631,7 @@ function renderAll(){
 }
 
 /* ===== Eventos ===== */
-$("form").addEventListener("submit", (e) => {
+$("form")?.addEventListener("submit", (e) => {
   e.preventDefault();
 
   const data = formData();
@@ -683,41 +698,43 @@ $("form").addEventListener("submit", (e) => {
   renderAll();
 });
 
-$("btnCancel").addEventListener("click", () => {
+$("btnCancel")?.addEventListener("click", () => {
   clearForm();
   setMsg("Edição cancelada.", true);
 });
 
 ["q","fStatus","fPriority","fCategory","fBranch","fPDV","sort"].forEach(id => {
-  $(id).addEventListener("input", renderAll);
-  $(id).addEventListener("change", renderAll);
+  const el = $(id);
+  if(!el) return;
+  el.addEventListener("input", renderAll);
+  el.addEventListener("change", renderAll);
 });
 
-$("btnClearFilters").addEventListener("click", () => {
-  $("q").value = "";
-  $("fStatus").value = "Todos";
-  $("fPriority").value = "Todos";
-  $("fCategory").value = "Todos";
-  $("fBranch").value = "Todos";
-  $("fPDV").value = "Todos";
-  $("sort").value = "atendimento";
+$("btnClearFilters")?.addEventListener("click", () => {
+  if($("q")) $("q").value = "";
+  if($("fStatus")) $("fStatus").value = "Todos";
+  if($("fPriority")) $("fPriority").value = "Todos";
+  if($("fCategory")) $("fCategory").value = "Todos";
+  if($("fBranch")) $("fBranch").value = "Todos";
+  if($("fPDV")) $("fPDV").value = "Todos";
+  if($("sort")) $("sort").value = "atendimento";
   renderAll();
 });
 
-$("btnSeed").addEventListener("click", seed);
-$("btnReset").addEventListener("click", resetAll);
+$("btnSeed")?.addEventListener("click", seed);
+$("btnReset")?.addEventListener("click", resetAll);
 
-$("btnExportCSV").addEventListener("click", exportCSV);
-$("btnExportJSON").addEventListener("click", exportJSON);
-$("importJSON").addEventListener("change", (e) => {
+$("btnExportCSV")?.addEventListener("click", exportCSV);
+$("btnExportJSON")?.addEventListener("click", exportJSON);
+$("importJSON")?.addEventListener("change", (e) => {
   const file = e.target.files?.[0];
   if(file) importJSONFile(file);
   e.target.value = "";
 });
 
 /* Modal */
-$("mClose").addEventListener("click", closeModal);
-$("mEdit").addEventListener("click", () => {
+$("mClose")?.addEventListener("click", closeModal);
+$("mEdit")?.addEventListener("click", () => {
   if(!modalId) return;
   const t = loadTickets().find(x => x.id === modalId);
   if(!t) return;
@@ -726,10 +743,10 @@ $("mEdit").addEventListener("click", () => {
   setMsg("Editando chamado.", true);
   setTab("tabChamados");
 });
-$("mNext").addEventListener("click", () => {
+$("mNext")?.addEventListener("click", () => {
   if(modalId) advanceStatus(modalId);
 });
-$("mDelete").addEventListener("click", () => {
+$("mDelete")?.addEventListener("click", () => {
   if(modalId) deleteTicket(modalId);
 });
 
@@ -739,7 +756,7 @@ document.querySelectorAll(".tab").forEach(btn => {
 });
 
 /* Tema */
-$("btnTheme").addEventListener("click", toggleTheme);
+$("btnTheme")?.addEventListener("click", toggleTheme);
 
 /* Inicial */
 (function init(){
