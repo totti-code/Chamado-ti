@@ -251,26 +251,29 @@ function renderQueue(){
 
   $("queueCount").textContent = `${list.length} na fila (com filtros atuais)`;
 
-  for(const t of list){
+  for(let i = 0; i < list.length; i++){
+  const t = list[i];
+  const pos = i + 1;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${escapeHtml(t.createdAt)}</td>
-      <td>${escapeHtml(t.id)}</td>
-      <td>${escapeHtml(t.branch)}</td>
-      <td>${escapeHtml(t.pdv)}</td>
-      <td><span class="badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span></td>
-      <td><span class="badge ${priorityClass(t.priority)}">${escapeHtml(t.priority)}</span></td>
-      <td>${escapeHtml(t.category)}</td>
-      <td>${escapeHtml(t.title)}</td>
-      <td>${escapeHtml(t.requester)}</td>
-      <td>${escapeHtml(t.assignedTo || "-")}</td>
-      <td>
-        <div class="tActions">
-          <button class="linkBtn" data-act="open" data-id="${escapeHtml(t.id)}">Abrir</button>
-          <button class="linkBtn" data-act="next" data-id="${escapeHtml(t.id)}">Status+</button>
-        </div>
-      </td>
-    `;
+  <td><strong>${pos}º</strong></td>
+  <td>${escapeHtml(t.createdAt)}</td>
+  <td>${escapeHtml(t.id)}</td>
+  <td>${escapeHtml(t.branch)}</td>
+  <td>${escapeHtml(t.pdv)}</td>
+  <td><span class="badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span></td>
+  <td><span class="badge ${priorityClass(t.priority)}">${escapeHtml(t.priority)}</span></td>
+  <td>${escapeHtml(t.category)}</td>
+  <td>${escapeHtml(t.title)}</td>
+  <td>${escapeHtml(t.requester)}</td>
+  <td>${escapeHtml(t.assignedTo || "-")}</td>
+  <td>
+    <div class="tActions">
+      <button class="linkBtn" data-act="open" data-id="${escapeHtml(t.id)}">Abrir</button>
+      <button class="linkBtn" data-act="next" data-id="${escapeHtml(t.id)}">Status+</button>
+    </div>
+  </td>
+`;
     body.appendChild(tr);
   }
 
