@@ -410,3 +410,28 @@ input:focus, select:focus, textarea:focus{
   .row4{ grid-template-columns: 1fr; }
   .actions{ justify-content:flex-end; }
 }
+/* ===== Ajuste SELECT dark ===== */
+
+select {
+  background-color: #18243a !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.15);
+  appearance: none;
+}
+
+/* opções do dropdown */
+select option {
+  background-color: #0f1b2e;
+  color: #ffffff;
+}
+
+/* opção quando passa o mouse */
+select option:hover {
+  background-color: #1f3a5f;
+}
+
+/* opção selecionada */
+select option:checked {
+  background-color: #2563eb;
+  color: #ffffff;
+}
